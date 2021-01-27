@@ -1,1 +1,1 @@
-## Class Byte ##
+## Class Byte including AND/OR ##
