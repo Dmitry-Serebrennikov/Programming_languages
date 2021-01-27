@@ -4,7 +4,7 @@
 <br>
 
 0 0 0 0 0 0 0 0 0 0 0 <br>
-0 0 0 L 0 0 0 0 0 0 0 <br>
+0 0 0 L  0  0  0  0  0  0  0 <br>
 0 0 0 L W W W W L 0 0 <br>
 0 L W L L W W L L 0 0 <br>
 0 L W L L W W L L L 0 <br>
