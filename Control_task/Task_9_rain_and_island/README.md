@@ -2,6 +2,7 @@
 
 **Total number of water blocks in landscape after rain**: 11 <br>
 <br>
+
     0 0 0 0 0 0 0 0 0 0 0
     0 0 0 L 0 0 0 0 0 0 0
     0 0 0 L W W W W L 0 0
