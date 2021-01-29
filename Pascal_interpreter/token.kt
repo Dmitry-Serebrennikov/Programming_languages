@@ -1,5 +1,5 @@
 enum class TokenType {
-    NUMBER,
+    INTEGER,
     PLUS,
     MINUS,
     MUL,
@@ -8,15 +8,15 @@ enum class TokenType {
     RPAREN,
     EOL,
     ID,
-    ASSIGN,
+    ASSIGNMENT,
     BEGIN,
     END,
-    DOT
-
+    EOF
 }
 
-class Token(val type: TokenType, val value: String){
-    override fun toString(): String{
+class Token(val type: TokenType, val value: String) {
+
+    override fun toString(): String {
         return "Token ($type, $value)"
     }
 }

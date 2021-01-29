@@ -1,25 +1,28 @@
 fun main(args: Array<String>) {
-    var interpreter: Interpreter
-    var text: String
-    var result: Double
+    var code: String
 
     while (true) {
-        print("in> ")
-        text = readLine().toString()
-        println(": $text")
+        print("Enter your code here: ")
+        code = readLine().toString()
 
-        if ((text == "exit") or (text.isEmpty())) {
+        if ((code == "q") or (code.isEmpty())) {
             break
         }
-
-        //interpreter = Interpreter(Lexer(text))
         try {
-            //result = interpreter.expr()
-            //println("out> $result")
+            val parser = Parser(Lexer(code))
+            val interpreter = Interpreter(parser)
+            interpreter.interpret()
+            print("Result: ")
+            println(interpreter.ID)
         }
         catch (e: InterpreterException){
-            System.err.println("out> $e")
+            System.err.println("Error: $e")
+
         }
     }
-    println("Bye, bye!")
+
+    val test1 = "BEGIN END."
+    val test2 = "BEGIN x := 2 + 3 * (2 + 3); y := 2 / 2 - 2 + 3 * ((1 + 1) + (1 + 1)); END."
+    val test3 = "BEGIN y := 2; BEGIN a := 3; a := a; b := 10 + a + 10 * y / 4; c := a - b; END x := 11; END."
+
 }

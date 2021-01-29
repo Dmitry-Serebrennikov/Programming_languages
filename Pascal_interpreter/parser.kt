@@ -1,22 +1,25 @@
+import java.lang.Exception
 
 class ParserException(message: String): Exception(message)
 
-class Parser(private val lexer: Lexer) {
+class Parser(private val lexer: Lexer){
     private var currentToken: Token = lexer.nextToken()
+    private var currentVariable: Variable? = null
 
     private fun checkTokenType(type: TokenType){
-        if (currentToken.type == type) {
+        if (currentToken.type == type)
+        {
             currentToken = lexer.nextToken()
         }
         else {
-            throw ParserException("invalid token order")
+            throw ParserException("Invalid token order")
         }
     }
 
     private fun factor(): Node {
         val token = currentToken
         when (token.type) {
-            TokenType.PLUS-> {
+            TokenType.PLUS -> {
                 checkTokenType(TokenType.PLUS)
                 return UnaryOp(token, factor())
             }
@@ -24,86 +27,119 @@ class Parser(private val lexer: Lexer) {
                 checkTokenType(TokenType.MINUS)
                 return UnaryOp(token, factor())
             }
-            TokenType.NUMBER-> {
-                checkTokenType(TokenType.NUMBER)
+            TokenType.INTEGER -> {
+                checkTokenType(TokenType.INTEGER)
                 return Number(token)
             }
-            TokenType.LPAREN-> {
+            TokenType.LPAREN -> {
                 checkTokenType(TokenType.LPAREN)
                 val result = expr()
                 checkTokenType(TokenType.RPAREN)
                 return result
             }
+            TokenType.ID -> {
+                checkTokenType(TokenType.ID)
+                currentVariable = Variable(token)
+                return Variable(token)
+            }
         }
-        throw  ParserException("invalid factor")
+        throw ParserException("Invalid factor")
     }
 
     private fun term(): Node {
+        val ops = arrayListOf<TokenType>(TokenType.DIV, TokenType.MUL)
         var result = factor()
-        val ops = arrayListOf<TokenType>(TokenType.DIV,
-                TokenType.MUL)
-        while (ops.contains(currentToken.type)) {
+        while (ops.contains(currentToken.type)){
             val token = currentToken
-            when (token.type) {
-                TokenType.MUL -> {
-                    checkTokenType(TokenType.MUL)
-                }
+            when (token.type){
                 TokenType.DIV -> {
                     checkTokenType(TokenType.DIV)
                 }
+                TokenType.MUL -> {
+                    checkTokenType(TokenType.MUL)
+                }
             }
-            return BinOp(result, token, factor())
+            result = BinOp(result, token, factor())
         }
         return result
     }
 
     fun expr(): Node {
-        /*currentToken = nextToken()
-        val left = currentToken
-        checkTokenType(TokenType.INTEGER)
-
-        val op = currentToken
-        if (op.type == TokenType.PLUS) {
-            checkTokenType(TokenType.PLUS)
-        }
-        else {
-            checkTokenType(TokenType.MINUS)
-        }
-        val right = currentToken
-        checkTokenType(TokenType.INTEGER)
-        if (op.type == TokenType.PLUS) {
-            return left.value.toInt() + right.value.toInt()
-        }
-        else {
-            return left.value.toInt() - right.value.toInt()
-        } */
-        //currentToken = lexer.nextToken()
-        val ops = arrayListOf<TokenType>(TokenType.PLUS,
-                TokenType.MINUS)
+        val ops = arrayListOf<TokenType>(TokenType.PLUS, TokenType.MINUS, TokenType.EOL)
         var result = term()
-        while (ops.contains(currentToken.type)) {
+        while (ops.contains(currentToken.type)){
             val token = currentToken
-            if (token.type == TokenType.PLUS) {
-                checkTokenType(TokenType.PLUS)
+            when (token.type) {
+                TokenType.PLUS -> checkTokenType(TokenType.PLUS)
+                TokenType.MINUS -> checkTokenType(TokenType.MINUS)
+                TokenType.EOL -> return result
             }
-            if (token.type == TokenType.MINUS) {
-                checkTokenType(TokenType.MINUS)
-            }
-            /*if (token.type == TokenType.MUL) {
-                checkTokenType(TokenType.MUL)
-                result *= term()
-            }
-            if (token.type == TokenType.DIV) {
-                checkTokenType(TokenType.DIV)
-                result /= term()
-            } */
-            return BinOp(result, token, term())
+            result = BinOp(result, token, term())
         }
         return result
     }
-}
 
-fun main(args: Array<String>){
-    val parser = Parser(Lexer("-2 - -2"))
-    print(parser.expr())
+    private fun assign() : Node? {
+        val ops = arrayListOf(TokenType.ASSIGNMENT, TokenType.ID, TokenType.EOL)
+        var writer: Node? = null
+        while (ops.contains(currentToken.type)) {
+            val token = currentToken
+            when(token.type) {
+                TokenType.ID -> {
+                    checkTokenType(TokenType.ID)
+                    currentVariable = Variable(token)
+                }
+                TokenType.ASSIGNMENT -> {
+                    checkTokenType(TokenType.ASSIGNMENT)
+                    writer = Writer(currentVariable!!, expr())
+                }
+                TokenType.EOL -> {
+                    checkTokenType(TokenType.EOL)
+                    return writer!!
+                }
+            }
+        }
+        return null
+    }
+
+    private fun assignment() : Node {
+        var body = Body()
+        do {
+            if (currentToken.type == TokenType.BEGIN) {
+                val newBody = complexStatement() as Body
+                body.addExpressions(newBody.expression)
+            }
+            val result = assign()
+            if (result != null){
+                body.addExpression(result)
+            }
+        } while (currentToken.type != TokenType.END)
+        return body
+    }
+
+    private fun complexStatement() : Node {
+        var result: Node = Body()
+        val ops = arrayListOf(TokenType.BEGIN, TokenType.END)
+        while (ops.contains(currentToken.type)) {
+            val token = currentToken
+            when (token.type) {
+                TokenType.BEGIN -> {
+                    checkTokenType(TokenType.BEGIN)
+                    result = assignment()
+                }
+                TokenType.END -> {
+                    checkTokenType(TokenType.END)
+                    return result
+                }
+            }
+        }
+        return result
+    }
+
+    fun parse() : Node? {
+        var result: Node? = null
+        result = complexStatement()
+        checkTokenType(TokenType.EOF)
+        return result
+    }
 }
